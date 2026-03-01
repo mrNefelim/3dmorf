@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3dMorph — 3D-печать на смоле</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --bg-card: #12161d;
+      --text: #e8eaed;
+      --text-muted: #8b9199;
+      --accent: #00c9a7;
+      --accent-dim: rgba(0, 201, 167, 0.15);
+      --layer: #1a1f28;
+      --border: #252b36;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Manrope', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .layer-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: 
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 201, 167, 0.02) 2px,
+          rgba(0, 201, 167, 0.02) 4px
+        );
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .hero {
+      padding: 80px 0 120px;
+      text-align: center;
+    }
+
+    .hero .tag {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .hero h1 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 24px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), #00e6c4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.125rem;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin: 0 auto 40px;
+    }
+
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 32px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cta-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 201, 167, 0.35);
+    }
+
+    .cta-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .section {
+      padding: 80px 0;
+    }
+
+    .section-title {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: border-color 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+
+    .card-icon {
+      width: 100%;
+      aspect-ratio: 16/10;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      background: var(--bg-card);
+    }
+
+    .card-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card h3 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      flex-grow: 1;
+      margin-bottom: 24px;
+    }
+
+    .card-price {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .card .cta-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .process-step {
+      text-align: center;
+      padding: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .process-step .num {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .process-step h4 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .process-step p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    @media (max-width: 700px) {
+      .examples { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      .examples { grid-template-columns: 1fr; }
+    }
+
+    .example-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 16px;
+      border-style: dashed;
+    }
+
+    .advantages {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .advantage {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .advantage span {
+      color: var(--accent);
+      font-size: 1.25rem;
+    }
+
+    .cta-section {
+      padding: 100px 0;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      max-width: 450px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .telegram-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 36px;
+      background: #0088cc;
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .telegram-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 136, 204, 0.4);
+    }
+
+    .telegram-link svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="layer-pattern"></div>
+
+  <header>
+    <div class="container">
+      <a href="index.html" class="logo">3dMorph</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <p class="tag">Волгоград</p>
+        <h1><span>3D-печать</span> на фотополимере</h1>
+        <p>Точная печать по вашей модели, по описанию или по фотографии. Высокое разрешение, постобработка.</p>
+        <a href="#tariffs" class="cta-btn">
+          Заказать печать
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <section class="section" id="tariffs">
+      <div class="container">
+        <h2 class="section-title">Тарифы</h2>
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-icon"><img src="images/model.jpg" alt="3D-модель" onerror="this.src='https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&q=80'"></div>
+            <h3>Печать вашей модели</h3>
+            <p>У вас уже есть 3D-модель (STL, OBJ)? Присылайте — напечатаем на фотополимере с высокой детализацией.</p>
+            <div class="card-price">от 2 000 ₽</div>
+            <a href="https://t.me/m/jdWlEoDwYTQy" class="cta-btn" target="_blank" rel="noopener">Заказать</a>
+          </div>
+          <div class="card">
+            <div class="card-icon"><img src="images/description.jpg" alt="Описание" onerror="this.src='https://images.unsplash.com/photo-1455390582262-044cdead277a?w=600&q=80'"></div>
+            <h3>Модель по описанию</h3>
+            <p>Опишите, что нужно — создадим модель и напечатаем. Подходит для прототипов и уникальных изделий.</p>
+            <div class="card-price">от 10 000 ₽</div>
+            <a href="https://t.me/m/jdWlEoDwYTQy" class="cta-btn" target="_blank" rel="noopener">Заказать</a>
+          </div>
+          <div class="card">
+            <div class="card-icon"><img src="images/camera.jpg" alt="Фотография" onerror="this.src='https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&q=80'"></div>
+            <h3>Модель по фотографии</h3>
+            <p>Пришлите фото объекта — воссоздадим его в 3D и напечатаем. Скульптуры, фигурки, копии.</p>
+            <div class="card-price">от 30 000 ₽</div>
+            <a href="https://t.me/m/jdWlEoDwYTQy" class="cta-btn" target="_blank" rel="noopener">Заказать</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Как это работает</h2>
+        <div class="process-steps">
+          <div class="process-step">
+            <div class="num">1</div>
+            <h4>Заявка</h4>
+            <p>Напишите в Telegram, опишите задачу или приложите файл</p>
+          </div>
+          <div class="process-step">
+            <div class="num">2</div>
+            <h4>Расчёт</h4>
+            <p>Обсудим детали, рассчитаем стоимость и сроки</p>
+          </div>
+          <div class="process-step">
+            <div class="num">3</div>
+            <h4>Печать</h4>
+            <p>Печатаем на принтере 12K, при необходимости постобработка</p>
+          </div>
+          <div class="process-step">
+            <div class="num">4</div>
+            <h4>Получение</h4>
+            <p>Самовывоз в Волгограде или доставка по согласованию</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Примеры работ</h2>
+        <div class="examples">
+          <div class="example-card">Фото готового изделия</div>
+          <div class="example-card">Фото готового изделия</div>
+          <div class="example-card">Фото готового изделия</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Почему мы</h2>
+        <div class="advantages">
+          <div class="advantage">
+            <span>✓</span>
+            <div>
+              <strong>12K разрешение</strong>
+              <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Высокая детализация, гладкие поверхности</p>
+            </div>
+          </div>
+          <div class="advantage">
+            <span>✓</span>
+            <div>
+              <strong>Фотополимер</strong>
+              <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Прочные, долговечные изделия</p>
+            </div>
+          </div>
+          <div class="advantage">
+            <span>✓</span>
+            <div>
+              <strong>Постобработка</strong>
+              <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Шпаклёвка, покраска по запросу</p>
+            </div>
+          </div>
+          <div class="advantage">
+            <span>✓</span>
+            <div>
+              <strong>Волгоград</strong>
+              <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Самовывоз или доставка</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section" id="contact">
+      <div class="container">
+        <h2>Заказать печать</h2>
+        <p>Напишите в Telegram — обсудим вашу задачу, рассчитаем стоимость и сроки.</p>
+        <a href="https://t.me/m/jdWlEoDwYTQy" class="telegram-link" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+          Написать в Telegram
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>3dMorph · 3D-печать на смоле · Волгоград</p>
+    </div>
+  </footer>
+</body>
+</html>
